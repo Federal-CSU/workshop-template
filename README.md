@@ -23,11 +23,11 @@ You → Copilot Studio → APIM (JWT validated) → Container Apps (MCP Server) 
 ## Quick Start
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/johnturek/TVA-Demo
+# 1. Clone the repo (with submodules)
+git clone --recurse-submodules https://github.com/johnturek/TVA-Demo
 cd TVA-Demo
 
-# 2. Install dependencies
+# 2. Install dependencies (auto-inits submodules if you forgot --recurse-submodules)
 npm install
 
 # 3. See all available tasks

@@ -31,6 +31,11 @@ function loadEnv(file = '.workshop-outputs.env') {
 
 // 1. Install all dependencies (Python MCP server + local Node tools)
 task('install', () => {
+  // Ensure git submodule (mcp-backend) is initialized
+  logger.info('Initializing git submodules...');
+  run('git submodule update --init --recursive');
+  logger.info('✅ Submodules ready');
+
   // Detect pip3 vs pip (macOS ships with pip3, some Linux distros use pip)
   const pip = (() => {
     try { execSync('pip3 --version', { stdio: 'ignore' }); return 'pip3'; } catch (_) {}
