@@ -46,16 +46,23 @@ This repo uses [`just-task`](https://github.com/microsoft/just) — Microsoft's 
 | Command | What it does |
 |---------|-------------|
 | `npx just --list` | List all available tasks |
-| `npx just setup` | Install deps + start local Docker stack |
-| `npx just dev` | Start Docker stack (backend + MCP server) |
-| `npx just dev:stop` | Stop Docker stack |
+| `npx just install` | Install Python + AI Search dependencies |
+| `npx just dev` | Start MCP server locally (Python/FastMCP) |
+| `npx just dev:docker` | Run MCP server in Docker locally |
+| `npx just dev:stop` | Stop Docker containers |
 | `npx just upload-docs` | Upload TVA docs to Azure AI Search index |
-| `npx just test:local` | Health check local endpoints |
-| `npx just test:prod` | Health check production APIM endpoint |
-| `npx just provision` | Deploy full Azure stack (Container Apps + APIM + App Reg) |
-| `npx just workshop:start` | Full Lab 1+2 setup (setup + upload-docs + test) |
-| `npx just workshop:ship` | End-of-day: provision Azure + verify production |
-| `npx just clean` | Stop Docker, remove volumes |
+| `npx just test:local` | Health check local MCP server |
+| `npx just test:prod` | Full endpoint test suite (device-code auth + 8 tests) |
+| `npx just provision` | Deploy full Azure stack (silent mode) |
+| `npx just provision:teach` | Deploy full Azure stack **(walkthrough mode — use in workshop)** |
+| `npx just add-user` | Add a user to the MCP.User app role (`USER_EMAIL=...`) |
+| `npx just sync` | Pull latest updates from Aaron's mcp-backend submodule |
+| `npx just setup` | Install deps + upload docs |
+| `npx just workshop:start` | Full Lab 1+2 setup |
+| `npx just workshop:ship` | End-of-day: provision Azure (walkthrough) + verify production |
+| `npx just clean` | Stop containers, remove volumes |
+
+> **Workshop tip:** Use `npx just provision:teach` for Lab 3 — it pauses at each step with explanations so participants understand what's being deployed.
 
 ---
 
@@ -121,16 +128,23 @@ TVA-Demo/
 ├── just.config.js          # Task runner — all workshop commands
 ├── package.json
 ├── .env.example
+├── .gitmodules             # Submodule: Aaron's mcp-backend
 │
-├── boilerplate/            # All code participants clone and use
-│   ├── docker-compose.yml      # Local dev stack
-│   ├── Dockerfile.mcp          # MCP server container image
-│   ├── mcp-server-stub.js      # MCP server (TVA knowledge tools)
-│   ├── upload-docs.py          # Upload TVA docs to AI Search
+├── boilerplate/
+│   ├── mcp-backend/            # ⭐ Git submodule — Aaron's production MCP server
+│   │   ├── mcp_server.py           # Python/FastMCP with PRM + OBO
+│   │   ├── deploy.ps1              # One-command Azure deployment (-Walkthrough for teaching)
+│   │   ├── setup-entra-apps.ps1    # Full Entra ID app registration
+│   │   ├── deploy-infrastructure.ps1
+│   │   ├── deploy-apim.ps1         # APIM + JWT policy
+│   │   ├── test-endpoints.ps1      # Full test suite (8 endpoint tests)
+│   │   ├── add-reply-url.ps1       # Add Copilot Studio redirect URI
+│   │   ├── add-users.ps1           # Assign users to MCP.User app role
+│   │   ├── Dockerfile
+│   │   ├── example.env
+│   │   └── requirements.txt
+│   ├── upload-docs.py          # Upload TVA docs to Azure AI Search
 │   ├── agent-template.yaml     # Copilot Studio agent definition
-│   ├── setup-app-registration.ps1  # Entra ID app reg setup
-│   ├── obo-token-flow.py       # OBO token exchange example
-│   ├── provision-azure.sh      # Full Azure provisioning (one command)
 │   └── test-agent.http         # REST Client test file
 │
 ├── docs/                   # Sample TVA documents for the knowledge base
@@ -148,6 +162,15 @@ TVA-Demo/
     ├── lab3-apim-mcp.md
     ├── facilitator-guide.md
     └── boilerplate-readme.md
+```
+
+### Keeping mcp-backend in sync
+
+Aaron's MCP server lives at `boilerplate/mcp-backend` as a git submodule. To pull his latest:
+
+```bash
+npx just sync
+git add boilerplate/mcp-backend && git commit -m "chore: sync mcp-backend"
 ```
 
 ---

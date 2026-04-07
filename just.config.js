@@ -29,80 +29,110 @@ function loadEnv(file = '.workshop-outputs.env') {
 
 // ── Tasks ─────────────────────────────────────────────────────────────────────
 
-// 1. Install all dependencies
+// 1. Install all dependencies (Python MCP server + local Node tools)
 task('install', () => {
-  logger.info('Installing boilerplate dependencies...');
-  run('pip install azure-search-documents openai azure-identity --quiet', { cwd: '../boilerplate' });
-  run('npm install express', { cwd: '../boilerplate' });
-  logger.info('✅ Dependencies installed');
+  logger.info('Installing MCP server dependencies (Python)...');
+  run('pip install -r requirements.txt', { cwd: 'boilerplate/mcp-backend' });
+  logger.info('✅ Python dependencies installed');
+  logger.info('Installing AI Search upload dependencies...');
+  run('pip install azure-search-documents openai azure-identity --quiet');
+  logger.info('✅ All dependencies installed');
 });
 
-// 2. Start local Docker stack (backend + MCP)
+// 2. Run MCP server locally (Python/FastMCP)
 task('dev', () => {
-  logger.info('Starting local TVA stack (Docker)...');
-  run('docker compose up -d', { cwd: '../boilerplate' });
-  logger.info('✅ Backend:  http://localhost:3001/health');
-  logger.info('✅ MCP:      http://localhost:3002/health');
+  logger.info('Starting TVA MCP server locally (Python/FastMCP)...');
+  logger.info('MCP endpoint:  http://localhost:8000/mcp');
+  logger.info('PRM metadata:  http://localhost:8000/.well-known/oauth-protected-resource');
+  logger.info('Press Ctrl+C to stop.');
+  run('python mcp_server.py', { cwd: 'boilerplate/mcp-backend' });
 });
 
-// 3. Stop local Docker stack
+// 3. Run MCP server via PowerShell script (Windows-friendly)
+task('dev:ps', () => {
+  run('pwsh -File run_mcp_server.ps1', { cwd: 'boilerplate/mcp-backend' });
+});
+
+// 4. Stop local MCP server (Docker variant if running in container)
 task('dev:stop', () => {
-  run('docker compose down', { cwd: '../boilerplate' });
+  run('docker compose down', { cwd: 'boilerplate/mcp-backend' });
 });
 
-// 4. Upload TVA docs to Azure AI Search
+// 5. Run MCP server in Docker locally
+task('dev:docker', () => {
+  logger.info('Building and starting MCP server in Docker...');
+  run('docker build -t tva-mcp . && docker run -p 8000:8000 --env-file ../.env tva-mcp', { cwd: 'boilerplate/mcp-backend' });
+});
+
+// 6. Upload TVA docs to Azure AI Search
 task('upload-docs', () => {
   logger.info('Uploading TVA documents to Azure AI Search...');
-  const env = {
-    ...process.env,
-    AZURE_SEARCH_ENDPOINT: process.env.AZURE_SEARCH_ENDPOINT,
-    AZURE_SEARCH_KEY: process.env.AZURE_SEARCH_KEY,
-  };
-  run('python3 upload-docs.py', { cwd: '../boilerplate', env });
+  run('python3 boilerplate/upload-docs.py');
   logger.info('✅ Docs uploaded to tva-knowledge-base index');
 });
 
-// 5. Provision full Azure stack (Container Apps + APIM + App Reg)
+// 7. Provision full Azure stack — uses Aaron's deploy.ps1 with -Walkthrough for workshop
+//    Requires PowerShell 7+ (pwsh). Pass LAB_NUM env var to set participant suffix.
 task('provision', () => {
-  const suffix = process.env.PARTICIPANT_SUFFIX || 'l01';
-  logger.info(`Provisioning Azure resources for participant: ${suffix}`);
-  logger.info('⏱  This takes ~15 minutes. Go get coffee.');
-  run(`bash provision-azure.sh ${suffix}`, { cwd: '../boilerplate' });
+  const labNum = process.env.LAB_NUM || 'l01';
+  const walkthrough = process.env.WALKTHROUGH === 'true' ? '-Walkthrough' : '';
+  logger.info(`Provisioning Azure resources for lab: ${labNum}`);
+  logger.info('⏱  APIM takes ~15 minutes. Grab coffee.');
+  logger.info('📚 MS Learn: https://learn.microsoft.com/en-us/azure/api-management/');
+  run(`pwsh -File deploy.ps1 -LabNum ${labNum} ${walkthrough}`, { cwd: 'boilerplate/mcp-backend' });
+  logger.info('✅ Azure stack provisioned. Check .env for APIM outputs.');
 });
 
-// 6. Test local endpoints
-task('test:local', () => {
-  logger.info('Testing local endpoints...');
-  run('curl -sf http://localhost:3001/health | python3 -m json.tool');
-  run('curl -sf http://localhost:3002/health | python3 -m json.tool');
-  logger.info('✅ Local stack healthy');
+// 8. Provision with walkthrough mode (teaching mode — pauses at each step)
+task('provision:teach', () => {
+  process.env.WALKTHROUGH = 'true';
+  const labNum = process.env.LAB_NUM || 'l01';
+  logger.info(`Provisioning in WALKTHROUGH mode for lab: ${labNum}`);
+  run(`pwsh -File deploy.ps1 -LabNum ${labNum} -Walkthrough`, { cwd: 'boilerplate/mcp-backend' });
 });
 
-// 7. Test production APIM endpoint
+// 9. Test all endpoints (uses Aaron's test-endpoints.ps1 — device-code auth + 8 tests)
 task('test:prod', () => {
-  const env = loadEnv();
-  const endpoint = env.MCP_ENDPOINT || process.env.MCP_ENDPOINT;
-  if (!endpoint) {
-    logger.error('MCP_ENDPOINT not set. Run `just provision` first or source .workshop-outputs.env');
-    process.exit(1);
-  }
-  logger.info(`Testing production endpoint: ${endpoint}`);
-  run(`curl -sf ${endpoint.replace('/mcp', '')}/health | python3 -m json.tool`);
-  logger.info('✅ Production stack healthy');
+  logger.info('Running endpoint tests (device-code auth required)...');
+  run('pwsh -File test-endpoints.ps1', { cwd: 'boilerplate/mcp-backend' });
 });
 
-// 8. Full local setup (install + dev)
-task('setup', series('install', 'dev'));
+// 10. Test local MCP server
+task('test:local', () => {
+  logger.info('Testing local MCP server...');
+  run('curl -sf http://localhost:8000/.well-known/oauth-protected-resource | python3 -m json.tool');
+  logger.info('✅ PRM metadata accessible');
+});
 
-// 9. Full workshop flow: setup → upload docs → test
-task('workshop:start', series('setup', 'upload-docs', 'test:local'));
+// 11. Sync Aaron's mcp-backend submodule to latest
+task('sync', () => {
+  logger.info('Syncing mcp-backend submodule to latest...');
+  run('git submodule update --remote boilerplate/mcp-backend');
+  logger.info('✅ mcp-backend updated to latest commit from Aaron\'s repo');
+  logger.info('Run `git add boilerplate/mcp-backend && git commit -m "chore: sync mcp-backend"` to save the update');
+});
 
-// 10. End of workshop: provision Azure + test prod
-task('workshop:ship', series('provision', 'test:prod'));
+// 12. Add a user to the MCP.User app role
+task('add-user', () => {
+  const user = process.env.USER_EMAIL;
+  if (!user) { logger.error('Set USER_EMAIL env var first'); process.exit(1); }
+  const env = loadEnv('.env');
+  run(`pwsh -File add-users.ps1 -TenantId "${env.OBO_TENANT_ID}" -AppClientId "${env.OAUTH_CLIENT_ID}" -Users "${user}"`,
+    { cwd: 'boilerplate/mcp-backend' });
+});
 
-// 11. Clean up (stop Docker, optionally delete Azure resources)
+// 13. Full local setup (install + dev)
+task('setup', series('install', 'upload-docs'));
+
+// 14. Full workshop flow: install → upload docs → start local server → test
+task('workshop:start', series('install', 'upload-docs', 'test:local'));
+
+// 15. End of workshop: provision Azure (walkthrough) + test prod
+task('workshop:ship', series('provision:teach', 'test:prod'));
+
+// 16. Clean up local (stop Docker)
 task('clean', () => {
-  run('docker compose down --volumes', { cwd: '../boilerplate' });
-  logger.info('Local stack stopped and volumes removed');
-  logger.info('To delete Azure resources: az group delete --name tva-workshop-rg');
+  run('docker compose down --volumes', { cwd: 'boilerplate/mcp-backend' });
+  logger.info('Local containers stopped.');
+  logger.info('To delete ALL Azure resources: az group delete --name mcp-workshop-rg --yes');
 });
