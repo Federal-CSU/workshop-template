@@ -1,0 +1,26 @@
+{
+  "name": "tva-workshop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "just.config.js",
+  "scripts": {
+    "just": "just",
+    "setup": "just setup",
+    "dev": "just dev",
+    "ship": "just workshop:ship"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnturek/TVA-Demo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/johnturek/TVA-Demo/issues"
+  },
+  "homepage": "https://github.com/johnturek/TVA-Demo#readme",
+  "devDependencies": {
+    "just-task": "^1.13.0"
+  }
+}

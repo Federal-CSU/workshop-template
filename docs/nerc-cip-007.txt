@@ -1,0 +1,33 @@
+TVA NERC CIP-007 Compliance Summary
+
+Standard: NERC CIP-007 - Systems Security Management
+Applicability: High and Medium Impact BES Cyber Systems
+
+1. PORTS AND SERVICES
+TVA shall define methods, processes, and procedures for identifying and disabling ports and services 
+not required for operations. All enabled ports must be documented and reviewed every 15 months.
+Unauthorized ports detected during review must be disabled within 35 days.
+
+2. SECURITY PATCH MANAGEMENT
+TVA must track, evaluate, and apply security patches for applicable Cyber Assets.
+- Security patches rated Critical or High: apply within 35 calendar days of availability
+- Security patches rated Medium: apply within 35 calendar days or document compensating controls
+- Patches that cannot be applied must have documented mitigation with quarterly review
+
+3. MALICIOUS CODE PREVENTION
+TVA shall deploy method(s) to deter, detect, or prevent malicious code on all applicable Cyber Assets.
+Signatures/definitions must be updated at least every 35 days.
+Alerts for detected malicious code must be reviewed within 1 business day.
+
+4. SECURITY EVENT MONITORING
+TVA shall log events on all applicable Cyber Assets.
+Security logs must be retained for a minimum of 90 calendar days.
+Logged events include: successful/unsuccessful login attempts, IP blocking, account changes.
+
+5. SYSTEM ACCESS CONTROLS
+TVA shall manage electronic access controls for interactive user access.
+- Shared accounts must be documented with justification
+- Default passwords must be changed before deployment
+- Password complexity: minimum 8 characters, mixed case, numbers required
+
+Contact: cip-compliance@tva.gov | Next assessment: 2026-07-15
