@@ -41,14 +41,12 @@ task('install', () => {
     for (const cmd of ['python3', 'python']) {
       try {
         const ver = execSync(`${cmd} -c "import sys; print(sys.version_info[:2])"`, { stdio: 'pipe' }).toString().trim();
-        // ver looks like "(3, 12)"
         const match = ver.match(/(\d+),\s*(\d+)/);
         if (match) {
           const [major, minor] = [parseInt(match[1]), parseInt(match[2])];
           if (major === 3 && minor >= 10) return cmd;
           throw new Error(`Python 3.10+ required. Found ${major}.${minor} via '${cmd}'.\n` +
-            '👉 Install Python 3.10+ from https://python.org\n' +
-            '   On macOS with Homebrew: brew install python@3.12\n' +
+            '👉 On macOS with Homebrew: brew install python@3.12\n' +
             '   Then re-run: npx just setup');
         }
       } catch (e) {
@@ -59,17 +57,34 @@ task('install', () => {
   })();
   logger.info(`Using ${python} (3.10+) ✅`);
 
-  // Detect pip3 vs pip
-  const pip = (() => {
-    try { execSync('pip3 --version', { stdio: 'ignore' }); return 'pip3'; } catch (_) {}
-    try { execSync('pip --version', { stdio: 'ignore' }); return 'pip'; } catch (_) {}
-    throw new Error('pip not found. Install Python 3.10+ from https://python.org');
-  })();
-  logger.info(`Using ${pip} to install Python dependencies...`);
-  run(`${pip} install -r requirements.txt`, { cwd: 'boilerplate/mcp-backend' });
+  // Create a venv in boilerplate/mcp-backend/.venv if it doesn't exist
+  // This avoids PEP 668 "externally managed environment" errors on macOS Homebrew Python
+  const venvPath = 'boilerplate/mcp-backend/.venv';
+  if (!fs.existsSync(venvPath)) {
+    logger.info('Creating Python virtual environment...');
+    run(`${python} -m venv ${venvPath}`);
+    logger.info('✅ Virtual environment created at ' + venvPath);
+  } else {
+    logger.info('✅ Virtual environment already exists');
+  }
+
+  // Use the venv's pip directly
+  const venvPip = process.platform === 'win32'
+    ? `${venvPath}/Scripts/pip`
+    : `${venvPath}/bin/pip`;
+  const venvPython = process.platform === 'win32'
+    ? `${venvPath}/Scripts/python`
+    : `${venvPath}/bin/python`;
+
+  logger.info('Installing MCP server dependencies into venv...');
+  run(`${venvPip} install -r requirements.txt`, { cwd: 'boilerplate/mcp-backend' });
   logger.info('✅ Python dependencies installed');
-  run(`${pip} install azure-search-documents azure-identity --quiet`);
+  run(`${venvPip} install azure-search-documents azure-identity --quiet`);
   logger.info('✅ All dependencies installed');
+  logger.info('');
+  logger.info('💡 To activate the venv manually: source boilerplate/mcp-backend/.venv/bin/activate');
+  // Write venv python path to a file so other tasks can use it
+  fs.writeFileSync('.venv-python', path.resolve(venvPython));
 });
 
 // 2. Run MCP server locally (Python/FastMCP)
@@ -78,11 +93,11 @@ task('dev', () => {
   logger.info('MCP endpoint:  http://localhost:8000/mcp');
   logger.info('PRM metadata:  http://localhost:8000/.well-known/oauth-protected-resource');
   logger.info('Press Ctrl+C to stop.');
-  const python = (() => {
-    try { execSync('python3 --version', { stdio: 'ignore' }); return 'python3'; } catch (_) {}
-    try { execSync('python --version', { stdio: 'ignore' }); return 'python'; } catch (_) {}
-    throw new Error('Python 3.9+ not found. Install from https://python.org');
-  })();
+  // Use venv python if available (created by npx just install)
+  const venvPython = path.resolve('boilerplate/mcp-backend/.venv/bin/python');
+  const python = fs.existsSync(venvPython) ? venvPython
+    : fs.existsSync('.venv-python') ? fs.readFileSync('.venv-python', 'utf8').trim()
+    : 'python3';
   run(`${python} mcp_server.py`, { cwd: 'boilerplate/mcp-backend' });
 });
 

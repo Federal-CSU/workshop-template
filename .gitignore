@@ -1,1 +1,7 @@
 node_modules/
+.env
+.venv/
+.venv-python
+*.pyc
+__pycache__/
+.workshop-outputs.env
