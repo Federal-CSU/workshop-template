@@ -110,7 +110,7 @@
 - 0–20 min: Create project, confirm model deployments
 - 20–45 min: Upload TVA documents, create vector index
 - 45–75 min: Test RAG in Foundry playground
-- 75–90 min: Copy endpoint URL + API key for Lab 2
+- 75–90 min: Copy endpoint URLs, API key, Agent ID, and Foundry Agent Endpoint for Lab 2
 
 **Exec track during lab:**
 - Separate breakout (Kevin designates an exec host)

@@ -53,20 +53,25 @@ task('dev:ps', () => {
   run('pwsh -File run_mcp_server.ps1', { cwd: 'boilerplate/mcp-backend' });
 });
 
-// 4. Stop local MCP server (Docker variant if running in container)
+// 4. Stop local MCP server
 task('dev:stop', () => {
-  run('docker compose down', { cwd: 'boilerplate/mcp-backend' });
+  run('docker compose down', { cwd: 'boilerplate' });
 });
 
-// 5. Run MCP server in Docker locally
+// 5. Run MCP server in Docker locally (port 8000)
 task('dev:docker', () => {
   logger.info('Building and starting MCP server in Docker...');
-  run('docker build -t tva-mcp . && docker run -p 8000:8000 --env-file ../.env tva-mcp', { cwd: 'boilerplate/mcp-backend' });
+  logger.info('MCP endpoint: http://localhost:8000/mcp');
+  run('docker compose up -d --build', { cwd: 'boilerplate' });
+  logger.info('✅ MCP server running. Run `npx just test:local` to verify.');
 });
 
-// 6. Upload TVA docs to Azure AI Search
+// 6. Upload TVA docs to Azure AI Search (optional — Lab 1 uses Foundry File Search instead)
+// Run this only if you need a separate AI Search index for custom connectors.
 task('upload-docs', () => {
-  logger.info('Uploading TVA documents to Azure AI Search...');
+  logger.info('Uploading TVA documents to Azure AI Search index...');
+  logger.info('NOTE: Lab 1 uses Foundry Agent File Search (upload via Foundry portal).');
+  logger.info('This task populates a separate AI Search index for custom connector use.');
   run('python3 boilerplate/upload-docs.py');
   logger.info('✅ Docs uploaded to tva-knowledge-base index');
 });
@@ -97,9 +102,9 @@ task('test:prod', () => {
   run('pwsh -File test-endpoints.ps1', { cwd: 'boilerplate/mcp-backend' });
 });
 
-// 10. Test local MCP server
+// 10. Test local MCP server (runs on port 8000)
 task('test:local', () => {
-  logger.info('Testing local MCP server...');
+  logger.info('Testing local MCP server on http://localhost:8000/mcp ...');
   run('curl -sf http://localhost:8000/.well-known/oauth-protected-resource | python3 -m json.tool');
   logger.info('✅ PRM metadata accessible');
 });
@@ -121,18 +126,18 @@ task('add-user', () => {
     { cwd: 'boilerplate/mcp-backend' });
 });
 
-// 13. Full local setup (install + dev)
-task('setup', series('install', 'upload-docs'));
+// 13. Full local setup (install only — Lab 1 doc upload done via Foundry portal)
+task('setup', series('install'));
 
-// 14. Full workshop flow: install → upload docs → start local server → test
-task('workshop:start', series('install', 'upload-docs', 'test:local'));
+// 14. Full workshop flow: install → start local server → test
+task('workshop:start', series('install', 'dev:docker', 'test:local'));
 
 // 15. End of workshop: provision Azure (walkthrough) + test prod
 task('workshop:ship', series('provision:teach', 'test:prod'));
 
 // 16. Clean up local (stop Docker)
 task('clean', () => {
-  run('docker compose down --volumes', { cwd: 'boilerplate/mcp-backend' });
+  run('docker compose down --volumes', { cwd: 'boilerplate' });
   logger.info('Local containers stopped.');
   logger.info('To delete ALL Azure resources: az group delete --name mcp-workshop-rg --yes');
 });

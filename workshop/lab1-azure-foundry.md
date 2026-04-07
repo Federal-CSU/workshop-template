@@ -143,6 +143,10 @@ AZURE_OPENAI_ENDPOINT=https://tva-workshop.openai.azure.com/
 AZURE_OPENAI_KEY=<your-key>
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 AZURE_AI_PROJECT_ENDPOINT=https://tva-workshop.services.ai.azure.com/api/projects/tva-doc-processor-[yourname]
+
+# Lab 2 uses these same values under these names:
+FOUNDRY_AGENT_ENDPOINT=https://tva-workshop.services.ai.azure.com/api/projects/tva-doc-processor-[yourname]
+FOUNDRY_AGENT_KEY=<same as AZURE_OPENAI_KEY above>
 ```
 
 > ⚠️ **Vignette: Quota exceeded (429 error)**
@@ -233,7 +237,7 @@ Before moving to lunch, verify:
 - [ ] Foundry project created and accessible
 - [ ] TVA documents uploaded and processed (status = Ready)
 - [ ] gpt-4o endpoint URI and key saved
-- [ ] `AZURE_AI_PROJECT_ENDPOINT` and `AZURE_AGENT_ID` saved
+- [ ] `AZURE_AI_PROJECT_ENDPOINT`, `AZURE_AGENT_ID`, `FOUNDRY_AGENT_ENDPOINT`, and `FOUNDRY_AGENT_KEY` saved to your `.env`
 - [ ] At least 2 agent queries returned document-cited answers
 - [ ] Python test script runs without errors
 

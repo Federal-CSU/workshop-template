@@ -98,14 +98,16 @@ cp .env.example .env
 ```
 
 ```env
-# Azure OpenAI / AI Foundry
+# Microsoft Foundry / Azure AI Projects (Lab 1)
+AZURE_AI_PROJECT_ENDPOINT=https://tva-workshop.services.ai.azure.com/api/projects/tva-doc-processor-[yourname]
+AZURE_AGENT_ID=
 AZURE_OPENAI_ENDPOINT=https://tva-workshop.openai.azure.com/
 AZURE_OPENAI_KEY=
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 
-# Azure AI Search
-AZURE_SEARCH_ENDPOINT=https://tva-workshop-search.search.windows.net
-AZURE_SEARCH_KEY=
+# Foundry Agent Endpoint (Lab 2 — same values as above)
+FOUNDRY_AGENT_ENDPOINT=https://tva-workshop.services.ai.azure.com/api/projects/tva-doc-processor-[yourname]
+FOUNDRY_AGENT_KEY=
 
 # Azure Identity (filled by provision-azure.sh)
 AZURE_TENANT_ID=
@@ -217,12 +219,12 @@ npx just workshop:start
 | Topic | Link |
 |-------|------|
 | Azure AI Foundry | https://learn.microsoft.com/en-us/azure/ai-foundry/ |
-| Azure OpenAI On Your Data | https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/use-your-data |
+| Foundry Agent Service | https://learn.microsoft.com/en-us/azure/ai-foundry/agents/overview |
 | Copilot Studio overview | https://learn.microsoft.com/en-us/microsoft-copilot-studio/ |
 | Copilot Studio + MCP | https://learn.microsoft.com/en-us/microsoft-copilot-studio/agent-extend-action-mcp |
 | Copilot Studio auth (OBO) | https://learn.microsoft.com/en-us/microsoft-copilot-studio/configuration-authentication-azure-ad |
 | Azure API Management | https://learn.microsoft.com/en-us/azure/api-management/ |
-| APIM JWT validation | https://learn.microsoft.com/en-us/azure/api-management/validate-jwt-policy |
+| APIM Entra ID token validation | https://learn.microsoft.com/en-us/azure/api-management/validate-azure-ad-token-policy |
 | Azure Container Apps | https://learn.microsoft.com/en-us/azure/container-apps/ |
 | Entra ID OBO flow | https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-on-behalf-of-flow |
 | just-task runner | https://microsoft.github.io/just/ |

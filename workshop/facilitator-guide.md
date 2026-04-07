@@ -164,7 +164,7 @@ Executives and developers have different needs. Don't ignore either group.
 **Fix:** Copilot Studio requires MCP server to be publicly accessible (not localhost). Use ngrok to expose local port: `ngrok http 3002` → use the ngrok URL in Copilot Studio MCP config.
 
 ### 10. Participant's agent gives wrong answers / ignores documents
-**Fix:** Generative answers may be defaulting to general knowledge. In agent Settings → Generative AI, confirm knowledge source is connected AND "Only use selected knowledge sources" is toggled ON.
+**Fix:** Generative answers may be defaulting to general knowledge. In the agent **Overview** page, confirm the knowledge source is connected AND select **"Only use selected knowledge sources"** in the knowledge settings. Note: this setting is on the Overview page, not Settings → Generative AI.
 
 ---
 

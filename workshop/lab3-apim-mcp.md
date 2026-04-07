@@ -31,33 +31,37 @@ We use Docker to simulate a TVA document management backend — no real systems 
 
 ### Step 1: Pull the Workshop Image
 ```bash
-cd ~/tva-workshop/boilerplate
+cd ~/TVA-Demo/boilerplate
 docker compose up -d
 ```
 
-The `docker-compose.yml` starts two services:
-- `tva-backend` on port 3001 — simulates TVA document API
-- `tva-mcp` on port 3002 — MCP server with TVA public docs
+The `docker-compose.yml` starts the MCP server:
+- `tva-mcp` on **port 8000** — MCP server with TVA tools (Streamable HTTP transport)
 
 ### Step 2: Verify It's Running
 ```bash
-curl http://localhost:3001/health
-# Expected: {"status":"ok","service":"TVA Document Backend Simulator"}
+curl -sf http://localhost:8000/.well-known/oauth-protected-resource
+# Expected: JSON PRM metadata object
 
-curl http://localhost:3001/api/documents
-# Expected: JSON array of TVA document metadata
+curl http://localhost:8000/mcp
+# Expected: 401 Unauthorized (auth is enabled) or MCP response
 ```
 
-### Step 3: Test a Document Query
+> ℹ️ The MCP server runs on **port 8000**, not 3001/3002. Use `npx just test:local` as a shortcut.
+
+### Step 3: Test the MCP Server
 ```bash
-curl -X POST http://localhost:3001/api/query \
+# With auth disabled (MCP_REQUIRE_AUTH=false in .env):
+curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
-  -H "X-Api-Key: workshop-demo-key-2026" \
-  -d '{"query": "NERC CIP-007 patch requirements", "top": 3}'
+  -d '{"method":"tools/list","params":{}}'
 ```
 
 > ⚠️ **Vignette: Docker not starting**
-> If `docker compose up` fails with "port already in use", run `docker ps` to find the conflict. Change the port mapping in `docker-compose.yml` from `"3001:3001"` to `"3011:3001"` and update your APIM backend URL accordingly.
+> If `docker compose up` fails, check:
+> 1. You're running from `~/TVA-Demo/boilerplate/` (not the repo root)
+> 2. Port 8000 isn't already in use (`lsof -i :8000`)
+> 3. The `mcp-backend/` directory has a valid `.env` file (copy from `mcp-backend/example.env`)
 
 ---
 
@@ -74,7 +78,7 @@ Navigate to it in Azure Portal → **API Management services** → `tva-workshop
 1. Click **APIs** → **+ Add API** → **HTTP**
 2. Configure:
    - **Display name:** `TVA Document Backend`
-   - **Web service URL:** `http://host.docker.internal:3001` (points to your local Docker)
+   - **Web service URL:** `http://host.docker.internal:8000` (points to your local Docker MCP server)
    - **API URL suffix:** `tva-[yourname]`
 3. Click **Create**
 
@@ -148,12 +152,11 @@ Test in the agent panel — should now route through APIM.
 
 MCP (Model Context Protocol) lets your agent call structured tools instead of free-form HTTP.
 
-### What's Pre-loaded in the Workshop MCP Server
-The `tva-mcp` container (port 3002) exposes these tools:
-- `search_tva_docs` — semantic search across TVA public documents
-- `get_nerc_requirement` — look up specific NERC CIP standard requirements
-- `check_compliance_status` — returns mock compliance posture for a given CIP standard
-- `list_regulations` — lists all TVA-relevant regulatory frameworks
+### What's Running in the Workshop MCP Server
+The `tva-mcp` container (port **8000**) exposes these tools via Streamable HTTP at `/mcp`:
+- `help` — list all tools and usage
+- `get_my_profile` — OBO demo: fetches the authenticated user's Graph profile
+- `analyze_policy` — Federal Policy Analyst: answers compliance/regulatory questions
 
 > 🚨 **Transport Warning: SSE is no longer supported**
 > Copilot Studio dropped **SSE (Server-Sent Events)** transport support after August 2025. Your `tva-mcp` container **must** use **Streamable HTTP** transport. If your MCP server is running SSE mode, Copilot Studio will silently fail to connect. Verify your container's transport config before proceeding.
@@ -164,7 +167,7 @@ The `tva-mcp` container (port 3002) exposes these tools:
 3. A setup wizard opens — fill in:
    - **Server name:** `TVA MCP Server`
    - **Description:** `TVA document search and NERC compliance tools`
-   - **URL:** `http://localhost:3002/mcp`
+   - **URL:** `http://localhost:8000/mcp`
    - **Authentication:** None (local dev) or OAuth (production)
 4. Complete the wizard — tools surface automatically. There is **no "Discover tools" button**.
 
@@ -172,8 +175,8 @@ Now your agent can call these tools automatically when a user asks a relevant qu
 
 ### Test MCP Tools
 In the Test panel:
-- "What does NERC CIP-011 require?" → should call `get_nerc_requirement`
-- "Search for TVA nuclear safety documents" → should call `search_tva_docs`
+- "What are the FedRAMP requirements for cloud services?" → should call `analyze_policy`
+- "Show me available tools" → should call `help`
 
 ---
 
