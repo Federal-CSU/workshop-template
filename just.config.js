@@ -59,32 +59,33 @@ task('install', () => {
 
   // Create a venv in boilerplate/mcp-backend/.venv if it doesn't exist
   // This avoids PEP 668 "externally managed environment" errors on macOS Homebrew Python
-  const venvPath = 'boilerplate/mcp-backend/.venv';
-  if (!fs.existsSync(venvPath)) {
+  const venvDir = path.resolve('boilerplate/mcp-backend/.venv');
+  if (!fs.existsSync(venvDir)) {
     logger.info('Creating Python virtual environment...');
-    run(`${python} -m venv ${venvPath}`);
-    logger.info('✅ Virtual environment created at ' + venvPath);
+    run(`${python} -m venv ${venvDir}`);
+    logger.info('✅ Virtual environment created at boilerplate/mcp-backend/.venv');
   } else {
     logger.info('✅ Virtual environment already exists');
   }
 
-  // Use the venv's pip directly
+  // Use absolute paths to the venv's pip and python
   const venvPip = process.platform === 'win32'
-    ? `${venvPath}/Scripts/pip`
-    : `${venvPath}/bin/pip`;
+    ? path.join(venvDir, 'Scripts', 'pip.exe')
+    : path.join(venvDir, 'bin', 'pip');
   const venvPython = process.platform === 'win32'
-    ? `${venvPath}/Scripts/python`
-    : `${venvPath}/bin/python`;
+    ? path.join(venvDir, 'Scripts', 'python.exe')
+    : path.join(venvDir, 'bin', 'python');
 
   logger.info('Installing MCP server dependencies into venv...');
-  run(`${venvPip} install -r requirements.txt`, { cwd: 'boilerplate/mcp-backend' });
+  const reqFile = path.resolve('boilerplate/mcp-backend/requirements.txt');
+  run(`"${venvPip}" install -r "${reqFile}"`);
   logger.info('✅ Python dependencies installed');
-  run(`${venvPip} install azure-search-documents azure-identity --quiet`);
+  run(`"${venvPip}" install azure-search-documents azure-identity --quiet`);
   logger.info('✅ All dependencies installed');
   logger.info('');
   logger.info('💡 To activate the venv manually: source boilerplate/mcp-backend/.venv/bin/activate');
   // Write venv python path to a file so other tasks can use it
-  fs.writeFileSync('.venv-python', path.resolve(venvPython));
+  fs.writeFileSync('.venv-python', venvPython);
 });
 
 // 2. Run MCP server locally (Python/FastMCP)
