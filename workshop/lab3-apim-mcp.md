@@ -1,4 +1,4 @@
-# Lab 3: APIM + MCP Integration — Local to Production
+# Lab 3: APIM + MCP Integration — Deploy to Production
 **Duration:** 90 minutes | **Session:** 3 of 3 | **Presenter:** JT
 
 > 📚 **Microsoft Learn:** [Azure API Management overview](https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts) | [Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/) | [Copilot Studio MCP](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agent-extend-action-mcp)
@@ -7,11 +7,9 @@
 
 ## Objectives
 By the end of this lab, participants will have:
-- A Docker-based TVA backend running locally (fast iteration)
+- **A production-ready MCP server on Azure Container Apps** — live, secured, shareable URL
 - Azure APIM configured with Entra ID JWT validation
 - Copilot Studio agent calling the backend securely via APIM
-- **A production-ready deployment on Azure Container Apps** — live, secured, shareable
-- An MCP server loaded with TVA public docs
 - Understanding of OBO token flow for production-grade auth
 - Know when to use MCP vs agent flows vs sub-agent models
 
@@ -19,147 +17,111 @@ By the end of this lab, participants will have:
 
 ## Prerequisites
 - Labs 1 and 2 complete
-- Docker Desktop installed and running
-- Azure CLI installed (`az --version`)
+- Azure CLI installed and logged in (`az login`)
+- PowerShell 7+ installed (`pwsh --version`)
 - Your agent from Lab 2 open in Copilot Studio
 
+> ℹ️ **No Docker required.** This lab deploys directly to Azure. If you want to iterate locally first, see [Appendix: Local Development with Docker](#appendix-local-development-with-docker) at the bottom.
+
 ---
 
-## Part 1: Deploy the TVA Backend Simulator (20 min)
+## Part 1: Deploy the Full Azure Stack (25 min)
 
-We use Docker to simulate a TVA document management backend — no real systems needed.
+This is the core of Lab 3 — one script deploys everything to Azure.
 
-### Step 1: Pull the Workshop Image
+> 📚 **MS Learn:** [Deploy to Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/quickstart-portal) | [APIM with Container Apps backend](https://learn.microsoft.com/en-us/azure/api-management/import-container-app-with-oas)
+
+### Step 1: Run the Provisioning Script
+
 ```bash
-cd ~/TVA-Demo/boilerplate
-docker compose up -d
+cd ~/TVA-Demo/boilerplate/mcp-backend
+pwsh ./deploy.ps1 -LabNum l01 -Walkthrough
 ```
 
-The `docker-compose.yml` starts the MCP server:
-- `tva-mcp` on **port 8000** — MCP server with TVA tools (Streamable HTTP transport)
+> 💡 **Use `-Walkthrough`** — it pauses at each step with detailed explanations of what's being deployed and why. This is the teaching version.
 
-### Step 2: Verify It's Running
-```bash
-curl -sf http://localhost:8000/.well-known/oauth-protected-resource
-# Expected: JSON PRM metadata object
+This script (~15 min) automatically:
+1. Creates an **Entra ID app registration** with correct API permissions (OAuth scopes, app roles, PRM metadata)
+2. Builds and pushes your MCP server image to **Azure Container Registry**
+3. Deploys the MCP server as a **Container App** (publicly accessible HTTPS endpoint)
+4. Provisions **APIM** in front of it with JWT validation policy
+5. Updates your `.env` with all credentials and endpoints
 
-curl http://localhost:8000/mcp
-# Expected: 401 Unauthorized (auth is enabled) or MCP response
+### Step 2: Review the Outputs
+When the script completes, you'll see:
+```
+==================== APIM OUTPUTS ====================
+APIM_NAME:      mcp-workshop-l01-apim
+APIM_GATEWAY:   https://mcp-workshop-l01-apim.azure-api.net
+MCP_ENDPOINT:   https://mcp-workshop-l01-apim.azure-api.net/mcp
+PRM_METADATA:   https://mcp-workshop-l01-apim.azure-api.net/.well-known/oauth-protected-resource
+BACKEND_URL:    https://mcp-workshop-l01-mcp.agreeabledune-xxx.eastus2.azurecontainerapps.io
+JWT_AUDIENCE:   api://[your-app-id]
+JWT_ISSUER:     https://login.microsoftonline.com/[tenant-id]/v2.0
+=======================================================
 ```
 
-> ℹ️ The MCP server runs on **port 8000**. Use `npx just test:local` as a shortcut.
-
-### Step 3: Test the MCP Server
+### Step 3: Verify the Deployment
 ```bash
-# With auth disabled (MCP_REQUIRE_AUTH=false in .env):
-curl -X POST http://localhost:8000/mcp \
+# Check PRM metadata (no auth needed)
+curl -sf https://mcp-workshop-l01-apim.azure-api.net/.well-known/oauth-protected-resource | python3 -m json.tool
+
+# Get a token and call the MCP endpoint
+TOKEN=$(az account get-access-token --resource $JWT_AUDIENCE --query accessToken -o tsv)
+curl -X POST $MCP_ENDPOINT \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"method":"tools/list","params":{}}'
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
 ```
 
-> ⚠️ **Vignette: Docker not starting**
-> If `docker compose up` fails, check:
-> 1. You're running from `~/TVA-Demo/boilerplate/` (not the repo root)
-> 2. Port 8000 isn't already in use (`lsof -i :8000`)
-> 3. The `mcp-backend/` directory has a valid `.env` file (copy from `mcp-backend/example.env`)
+> ⚠️ **Vignette: APIM provisioning takes 10-15 minutes**
+> The Consumption tier APIM is fast to create but still takes time. The script is idempotent — safe to re-run if it fails mid-way.
+>
+> 📚 [APIM tiers comparison](https://learn.microsoft.com/en-us/azure/api-management/api-management-features)
 
 ---
 
-## Part 2: Configure Azure APIM (25 min)
+## Part 2: Understand the Architecture (10 min)
 
-APIM sits between Copilot Studio and your backend — handling auth, rate limiting, and routing.
+### What `deploy.ps1` Built
 
-### Step 1: Create APIM Instance (Pre-provisioned)
-The workshop hub has a shared APIM instance: `tva-workshop-apim.azure-api.net`
-
-Navigate to it in Azure Portal → **API Management services** → `tva-workshop-apim`
-
-### Step 2: Import Your API
-1. Click **APIs** → **+ Add API** → **HTTP**
-2. Configure:
-   - **Display name:** `TVA Document Backend`
-   - **Web service URL:** `http://host.docker.internal:8000` (points to your local Docker MCP server)
-   - **API URL suffix:** `tva-[yourname]`
-3. Click **Create**
-
-### Step 3: Add API Key Policy
-In your API → **All operations** → **Inbound processing** → click `</>`:
-
-```xml
-<policies>
-  <inbound>
-    <base />
-    <check-header name="X-Api-Key" failed-check-httpcode="401" 
-                  failed-check-error-message="Invalid API key" 
-                  ignore-case="true">
-      <value>workshop-demo-key-2026</value>
-    </check-header>
-    <set-header name="X-TVA-RequestId" exists-action="override">
-      <value>@(Guid.NewGuid().ToString())</value>
-    </set-header>
-  </inbound>
-  <backend>
-    <base />
-  </backend>
-  <outbound>
-    <base />
-  </outbound>
-</policies>
+```
+User
+  │
+  ▼
+Copilot Studio Agent
+  │  (Entra ID SSO — user's identity forwarded)
+  ▼
+Azure APIM  ──── JWT validation (`validate-azure-ad-token` policy)
+  │           ──── CORS policy
+  │           ──── Rate limiting
+  ▼
+Azure Container Apps (TVA MCP Server)
+  │  (always-on, auto-scaling, HTTPS)
+  ▼
+TVA Knowledge Base (Azure AI Search + AI Foundry)
 ```
 
-### Step 4: Add the Query Operation
-1. Click **+ Add operation**
-2. **Name:** Query Documents
-3. **Method:** POST
-4. **URL:** `/api/query`
-5. Save
-
-### Step 5: Test via APIM
-```bash
-curl -X POST "https://tva-workshop-apim.azure-api.net/tva-[yourname]/api/query" \
-  -H "Content-Type: application/json" \
-  -H "X-Api-Key: workshop-demo-key-2026" \
-  -d '{"query": "nuclear plant safety procedures", "top": 3}'
-```
-
-> ⚠️ **Vignette: CORS errors when calling from Copilot Studio**
-> Add this to your APIM inbound policy:
-> ```xml
-> <cors>
->   <allowed-origins><origin>https://copilotstudio.microsoft.com</origin></allowed-origins>
->   <allowed-methods><method>POST</method><method>GET</method></allowed-methods>
->   <allowed-headers><header>*</header></allowed-headers>
-> </cors>
-> ```
+### The Four Layers
+1. **Entra ID** — Identity: Who is calling? (OAuth 2.0 / JWT tokens)
+2. **APIM** — Gateway: Is the caller allowed in? (validate-jwt policy)
+3. **Container App** — Server: The FastMCP server that runs the tools
+4. **OBO** — Downstream: Call Microsoft Graph AS the user (On-Behalf-Of)
 
 ---
 
-## Part 3: Connect Agent to APIM (10 min)
-
-### Update Your Lab 2 Topic
-1. Open Copilot Studio → your TVA Document Processor agent
-2. Open the **Document Search** topic
-3. Update the HTTP action URL from the direct Azure OpenAI endpoint to your APIM URL:
-   - **Before:** `https://YOUR_PROJECT_ENDPOINT/...`
-   - **After:** `https://tva-workshop-apim.azure-api.net/tva-[yourname]/api/query`
-4. Update headers — replace `api-key` with `X-Api-Key: workshop-demo-key-2026`
-
-Test in the agent panel — should now route through APIM.
-
----
-
-## Part 4: MCP Server with TVA Docs (15 min)
+## Part 3: Connect MCP to Copilot Studio (15 min)
 
 MCP (Model Context Protocol) lets your agent call structured tools instead of free-form HTTP.
 
 ### What's Running in the Workshop MCP Server
-The `tva-mcp` container (port **8000**) exposes these tools via Streamable HTTP at `/mcp`:
+Your deployed MCP server exposes these tools via Streamable HTTP at `/mcp`:
 - `help` — list all tools and usage
 - `get_my_profile` — OBO demo: fetches the authenticated user's Graph profile
 - `analyze_policy` — Federal Policy Analyst: answers compliance/regulatory questions
 
 > 🚨 **Transport Warning: SSE is no longer supported**
-> Copilot Studio dropped **SSE (Server-Sent Events)** transport support after August 2025. Your `tva-mcp` container **must** use **Streamable HTTP** transport. If your MCP server is running SSE mode, Copilot Studio will silently fail to connect. Verify your container's transport config before proceeding.
+> Copilot Studio dropped **SSE (Server-Sent Events)** transport support after August 2025. Your MCP server **must** use **Streamable HTTP** transport. The workshop MCP server is already configured for this.
 
 ### Connect MCP to Copilot Studio
 1. In your agent, go to the **Tools** page
@@ -167,47 +129,21 @@ The `tva-mcp` container (port **8000**) exposes these tools via Streamable HTTP 
 3. A setup wizard opens — fill in:
    - **Server name:** `TVA MCP Server`
    - **Description:** `TVA document search and NERC compliance tools`
-   - **URL:** `http://localhost:8000/mcp`
-   - **Authentication:** None (local dev) or OAuth (production)
-4. Complete the wizard — tools surface automatically. There is **no "Discover tools" button**.
+   - **URL:** Your `MCP_ENDPOINT` from deploy output (e.g. `https://mcp-workshop-l01-apim.azure-api.net/mcp`)
+   - **Authentication:** OAuth 2.0 → configure with your `JWT_AUDIENCE` and Entra ID endpoints
+4. Complete the wizard — tools surface automatically
 
-Now your agent can call these tools automatically when a user asks a relevant question.
+> 📚 [Connect Copilot Studio to an MCP server](https://learn.microsoft.com/en-us/microsoft-copilot-studio/mcp-add-existing-server-to-agent)
 
 ### Test MCP Tools
 In the Test panel:
 - "What are the FedRAMP requirements for cloud services?" → should call `analyze_policy`
 - "Show me available tools" → should call `help`
+- "Who am I?" → should call `get_my_profile` (OBO demo)
 
 ---
 
-## Part 5: When to Use What — Decision Tree (10 min)
-
-```
-User needs info from a document/knowledge base?
-  └── YES → Use Knowledge Source (Azure AI Search connected to Foundry)
-  
-User needs to trigger an action or workflow?
-  └── YES → Is the action a well-defined tool with a schema?
-        ├── YES → Use MCP (cleaner, model picks the right tool)
-        └── NO → Use Agent Flow / HTTP Action (more control)
-
-Multiple specialized agents needed?
-  └── YES → Use Sub-agent model (orchestrator + specialist agents)
-  └── NO → Keep it in one agent with topics
-
-Needs to work across Teams, web, mobile, API?
-  └── YES → Use Agent SDK (consistent identity across channels)
-```
-
-**Rule of thumb for TVA:**
-- **Read-only compliance queries** → Knowledge source
-- **Structured lookups** (get NERC requirement by ID) → MCP
-- **Multi-step workflows** (submit variance request, escalate finding) → Agent flow
-- **Cross-system orchestration** → Sub-agent model
-
----
-
-## Part 6: OBO Token Flow (10 min)
+## Part 4: OBO Token Flow (10 min)
 
 For production TVA deployment, the agent must pass the user's identity to backend systems — not a service account.
 
@@ -249,23 +185,39 @@ See `boilerplate/obo-token-flow.py` for the full Python implementation.
 
 ---
 
-## Lab 3 Checkpoint ✅
+## Part 5: When to Use What — Decision Tree (10 min)
 
-- [ ] Docker backend running (`curl localhost:8000/health` returns OK)
-- [ ] APIM configured with your API and policy
-- [ ] Agent routes through APIM successfully
-- [ ] MCP tools discovered and enabled
-- [ ] MCP tool called automatically in at least one test conversation
-- [ ] OBO flow explained and APIM policy reviewed
+```
+User needs info from a document/knowledge base?
+  └── YES → Use Knowledge Source (Azure AI Search connected to Foundry)
+  
+User needs to trigger an action or workflow?
+  └── YES → Is the action a well-defined tool with a schema?
+        ├── YES → Use MCP (cleaner, model picks the right tool)
+        └── NO → Use Agent Flow / HTTP Action (more control)
+
+Multiple specialized agents needed?
+  └── YES → Use Sub-agent model (orchestrator + specialist agents)
+  └── NO → Keep it in one agent with topics
+
+Needs to work across Teams, web, mobile, API?
+  └── YES → Use Agent SDK (consistent identity across channels)
+```
+
+**Rule of thumb for TVA:**
+- **Read-only compliance queries** → Knowledge source
+- **Structured lookups** (get NERC requirement by ID) → MCP
+- **Multi-step workflows** (submit variance request, escalate finding) → Agent flow
+- **Cross-system orchestration** → Sub-agent model
 
 ---
 
-## End-to-End Demo Script
+## Part 6: End-to-End Demo (20 min)
 
 Run this conversation to show the full stack working:
 
 1. **User:** "What are TVA's patch management requirements under NERC CIP-007?"
-   - *Should: call MCP `get_nerc_requirement`, return structured answer*
+   - *Should: call MCP `analyze_policy`, return structured answer*
 
 2. **User:** *(uploads `tva-compliance-report-q1.pdf`)* "Review this for compliance gaps"
    - *Should: process file, call Azure AI Foundry, return gap analysis*
@@ -278,113 +230,14 @@ Run this conversation to show the full stack working:
 
 ---
 
-## Part 7: Deploy to Production — Azure Container Apps (20 min)
+## Lab 3 Checkpoint ✅
 
-This is the step that turns your workshop demo into a real production asset TVA can actually use.
-
-> 📚 **MS Learn:** [Deploy to Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/quickstart-portal) | [APIM with Container Apps backend](https://learn.microsoft.com/en-us/azure/api-management/import-container-app-with-oas)
-
-### Step 1: Run the Provisioning Script
-```bash
-cd ~/TVA-Demo
-cd boilerplate/mcp-backend
-pwsh ./deploy.ps1 -LabNum l01   # or add -Walkthrough for teaching mode
-```
-
-This script (~15 min) automatically:
-1. Creates an **Entra ID app registration** with correct API permissions
-2. Builds and pushes your MCP server to **Azure Container Registry**
-3. Deploys MCP server as a **Container App** (publicly accessible HTTPS endpoint)
-4. Provisions **APIM** in front of it with JWT validation policy
-5. Outputs all values you need for Copilot Studio
-
-### Step 2: Review the Outputs
-When the script completes, you'll see:
-```
-==================== APIM OUTPUTS ====================
-APIM_NAME:      mcp-workshop-jt-apim
-APIM_GATEWAY:   https://mcp-workshop-jt-apim.azure-api.net
-MCP_ENDPOINT:   https://mcp-workshop-jt-apim.azure-api.net/mcp
-PRM_METADATA:   https://mcp-workshop-jt-apim.azure-api.net/.well-known/oauth-protected-resource
-BACKEND_URL:    https://mcp-workshop-jt-mcp.agreeabledune-xxx.eastus2.azurecontainerapps.io
-JWT_AUDIENCE:   api://[your-app-id]
-JWT_ISSUER:     https://login.microsoftonline.com/[tenant-id]/v2.0
-=======================================================
-```
-
-Outputs are also saved to `.workshop-outputs.env` — source it for use in other scripts:
-```bash
-source .workshop-outputs.env
-```
-
-### Step 3: Update Copilot Studio to Point to Production
-1. Open your agent in Copilot Studio
-2. Go to **Tools** → find your MCP tool → **Edit**
-3. Update the server URL from `http://localhost:8000/mcp` → your `MCP_ENDPOINT`
-4. Update authentication to use `JWT_AUDIENCE` from script output
-
-> 📚 [Connect Copilot Studio to an MCP server](https://learn.microsoft.com/en-us/microsoft-copilot-studio/mcp-add-existing-server-to-agent)
-
-### Step 4: Verify Production End-to-End
-```bash
-# Health check (no auth needed)
-curl https://mcp-workshop-jt-apim.azure-api.net/mcp/health
-
-# MCP call with token (requires valid Entra ID token)
-TOKEN=$(az account get-access-token --resource $JWT_AUDIENCE --query accessToken -o tsv)
-curl -X POST $MCP_ENDPOINT \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"method":"tools/list","params":{}}'
-```
-
-### What You Just Built — The Production Architecture
-
-```
-User
-  │
-  ▼
-Copilot Studio Agent
-  │  (Entra ID SSO — user's identity forwarded)
-  ▼
-Azure APIM  ──── JWT validation (`validate-azure-ad-token` policy)
-  │           ──── CORS policy
-  │           ──── Rate limiting
-  ▼
-Azure Container Apps (TVA MCP Server)
-  │  (always-on, auto-scaling, HTTPS)
-  ▼
-TVA Knowledge Base (Azure AI Search + AI Foundry)
-```
-
-> ⚠️ **Vignette: APIM provisioning takes 10-15 minutes**
-> The Consumption tier APIM is fast to create but still takes time. Run the script at the start of the session break so it's ready by the time you need it. The script is idempotent — safe to re-run if it fails mid-way.
->
-> 📚 [APIM tiers comparison](https://learn.microsoft.com/en-us/azure/api-management/api-management-features)
-
-> ⚠️ **Vignette: Container App returns 401 before APIM policy applies**
-> Your Container App backend URL is publicly accessible. Add Entra ID auth directly on the Container App as a defense-in-depth layer so only APIM can call it:
-> ```bash
-> az containerapp auth microsoft update \
->   --name $CONTAINER_APP_NAME \
->   --resource-group $RESOURCE_GROUP \
->   --client-id $AZURE_CLIENT_ID \
->   --client-secret $AZURE_CLIENT_SECRET \
->   --tenant-id $AZURE_TENANT_ID \
->   --yes
-> ```
-> 📚 [Container Apps authentication with Entra ID](https://learn.microsoft.com/en-us/azure/container-apps/authentication-entra)
-
----
-
-## Lab 3 Final Checkpoint ✅
-
-- [ ] Docker backend ran locally (localhost:8000 health check passed)
-- [ ] APIM JWT policy validated tokens correctly
-- [ ] MCP tools discovered and called in Copilot Studio
-- [ ] `deploy.ps1` ran successfully
+- [ ] `deploy.ps1` ran successfully (all 4 steps passed)
 - [ ] Production MCP endpoint responds to authenticated requests
-- [ ] Copilot Studio agent updated to point to production endpoint
+- [ ] PRM metadata returns valid JSON at `/.well-known/oauth-protected-resource`
+- [ ] MCP tools discovered and connected in Copilot Studio
+- [ ] MCP tool called automatically in at least one test conversation
+- [ ] OBO flow explained and APIM policy reviewed
 - [ ] End-to-end demo conversation works against live Azure backend
 
 ---
@@ -406,3 +259,39 @@ TVA Knowledge Base (Azure AI Search + AI Foundry)
 This is the pattern every government AI deployment should follow: the user talks to Copilot in plain English, Copilot routes to the right system through a secure API gateway, and every request is logged with the user's identity. TVA's compliance team gets AI capability without compromising the audit controls NERC CIP requires.
 
 **What TVA owns at the end of today:** A production-ready, Entra ID–secured, auto-scaling AI agent connected to TVA's own knowledge base — deployed in Azure, accessible from Teams, and ready for real users.
+
+---
+
+## Appendix: Local Development with Docker
+
+> ℹ️ **This section is optional.** Use it if you want to iterate on the MCP server locally before deploying to Azure, or if Azure provisioning is still running.
+
+### Start the Local MCP Server
+```bash
+cd ~/TVA-Demo/boilerplate
+docker compose up -d
+```
+
+This starts the MCP server on **port 8000** with auth disabled.
+
+### Verify It's Running
+```bash
+curl -sf http://localhost:8000/.well-known/oauth-protected-resource
+# Expected: JSON PRM metadata object
+
+# Test the MCP endpoint
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+> ⚠️ **Docker tips:**
+> - Run from `~/TVA-Demo/boilerplate/` (not the repo root)
+> - If port 8000 is in use: `lsof -i :8000`
+> - Copy env file if missing: `cp mcp-backend/example.env mcp-backend/.env`
+> - In Codespaces, Docker works via docker-in-docker (pre-configured in devcontainer)
+
+### Stop Local Containers
+```bash
+npx just clean   # or: docker compose down --volumes
+```
