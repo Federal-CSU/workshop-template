@@ -4,6 +4,8 @@
 >
 > Build a production-ready, Entra ID–secured AI agent connected to TVA's knowledge base — live in Azure by end of day.
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/johnturek/TVA-Demo?quickstart=1)
+
 ---
 
 ## What You'll Build
