@@ -18,11 +18,11 @@
 | 11:00 – 11:15 | Session 2 Intro: Azure AI Foundry | Presentation | Kevin | Everyone |
 | 11:15 – 12:00 | Lab 2: Azure AI Foundry Setup | Hands-On Lab | Kevin | Everyone |
 | 12:00 – 1:00 | Lunch — *Kevin leads executive working lunch* | Working Lunch | Kevin | Leadership breakout / Tech lunch |
-| 2:00 – 2:30 | Session 3 Intro: APIM + MCP + Secure Auth | Presentation | JT | Technical team |
-| 2:30 – 4:00 | Lab 3: APIM Integration + MCP Server | Hands-On Lab | JT | Technical team |
-| 4:00 – 4:15 | Break | — | — | — |
-| 4:15 – 4:45 | Demo Showcase & What You Built | Demo/Discussion | All | Technical team |
-| 4:45 – 5:00 | Closing: Next Steps & TVA Roadmap | Presentation | JT | Everyone |
+| 1:00 – 1:30 | Session 3 Intro: APIM + MCP + Secure Auth | Presentation | JT | Technical team |
+| 1:30 – 3:00 | Lab 3: APIM Integration + MCP Server | Hands-On Lab | JT | Technical team |
+| 3:00 – 3:15 | Break | — | — | — |
+| 3:15 – 3:45 | Demo Showcase & What You Built | Demo/Discussion | All | Technical team |
+| 3:45 – 4:00 | Closing: Next Steps & TVA Roadmap | Presentation | JT | Everyone |
 
 > **Session order:** Least → most technical. Leadership is present through lunch. Kevin leads a separate executive working lunch to discuss strategy, roadmap, and next steps while the technical team continues into the afternoon deep-dive.
 
@@ -189,7 +189,7 @@
 
 ---
 
-### 2:00 PM – 2:30 PM | Session 3 Intro: APIM + MCP + Secure Auth
+### 1:00 PM – 1:30 PM | Session 3 Intro: APIM + MCP + Secure Auth
 **Format:** Presentation  
 **Presenter:** JT  
 **Audience:** Technical team (leadership departs after working lunch)
@@ -209,7 +209,7 @@
 
 ---
 
-### 2:30 PM – 4:00 PM | Lab 3: APIM Integration + MCP Server
+### 1:30 PM – 3:00 PM | Lab 3: APIM Integration + MCP Server
 **Format:** Hands-On Lab (90 min)  
 **Presenter/Facilitator:** JT  
 **See:** `lab3-apim-mcp.md`
@@ -230,11 +230,11 @@
 
 ---
 
-### 4:00 PM – 4:15 PM | Break
+### 3:00 PM – 3:15 PM | Break
 
 ---
 
-### 4:15 PM – 4:45 PM | Demo Showcase & What You Built
+### 3:15 PM – 3:45 PM | Demo Showcase & What You Built
 **Format:** Demo + Discussion  
 **Presenter:** All  
 **Audience:** Technical team
@@ -246,7 +246,7 @@
 
 ---
 
-### 4:45 PM – 5:00 PM | Closing: Next Steps & TVA Roadmap
+### 3:45 PM – 4:00 PM | Closing: Next Steps & TVA Roadmap
 **Format:** Presentation  
 **Presenter:** JT  
 **Audience:** Everyone
