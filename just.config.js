@@ -234,8 +234,11 @@ task('foundry:deploy', () => {
   logger.info('Deploying Foundry Lab infrastructure (AI Foundry Account + Project + AI Search)...');
   logger.info('⏱  First run takes ~5 minutes for Bicep deployment.');
   const labNum = process.env.LAB_NUM || '';
+  const labNumFlag = labNum ? `-LabNum ${labNum}` : '';
+  const searchLocation = process.env.SEARCH_LOCATION || '';
+  const searchLocationFlag = searchLocation ? `-SearchLocation ${searchLocation}` : '';
   const walkthrough = process.env.WALKTHROUGH === 'true' ? '-Walkthrough' : '';
-  run(`pwsh -File deploy.ps1 -Prefix foundry-lab ${walkthrough}`, { cwd: 'boilerplate/mcp-backend/foundry-lab' });
+  run(`pwsh -File deploy.ps1 -Prefix foundry-lab ${labNumFlag} ${searchLocationFlag} ${walkthrough}`, { cwd: 'boilerplate/mcp-backend/foundry-lab' });
 });
 
 // 19. Run a specific Foundry lab (e.g., FOUNDRY_LAB=01 npx just foundry:lab)
