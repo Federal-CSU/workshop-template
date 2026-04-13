@@ -75,7 +75,7 @@ if ($Walkthrough) { Read-Host "     Press Enter to continue" }
 Write-Host ""
 Write-Host "  [3/5] Building and pushing MCP server Docker image..." -ForegroundColor Cyan
 $ScriptDir = Split-Path -Parent $PSScriptRoot
-az acr build --registry $AcrName --image "tva-mcp-server:latest" "$ScriptDir/.." --file "$ScriptDir/../Dockerfile.mcp" --output none
+az acr build --registry $AcrName --image "tva-mcp-server:latest" "$ScriptDir" --file "$ScriptDir/Dockerfile.mcp" --output none
 Write-Host "        ✅ Image pushed to $AcrLoginServer/tva-mcp-server:latest" -ForegroundColor Green
 if ($Walkthrough) { Read-Host "     Press Enter to continue" }
 
