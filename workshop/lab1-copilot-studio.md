@@ -50,11 +50,15 @@ Today, answering a cross-cutting regulatory question — "Can we modify the cool
 
 1. Click **+ Create blank agent**.
 
+![Screenshot of create an agent button](./images/mcs-create-agent-1.png)
+
 2. Wait till the message *Your agent has been provisioned* appears.
 
 3. If you see the *A newer version of this agent is available. Refresh to get the latest changes.*, click the **Refresh** link.
 
 4. Click **Edit** in the *details* section.
+
+![Screenshot of agent details edit button](./images/mcs-create-agent-2.png)
 
 5. Provide the following name and description:
    - **Name:** `TVA Regulatory Compliance Assistant`
@@ -62,7 +66,11 @@ Today, answering a cross-cutting regulatory question — "Can we modify the cool
 
 6. Click **Save** in the *details* section.
 
+![Screenshot of agent details filled out](./images/mcs-create-agent-3.png)
+
 7. Click **Edit** in the *instructions* section.
+
+![Screenshot of agent instructions edit button](./images/mcs-create-agent-4.png)
 
 8. Add the following for the **Instructions**
 
@@ -127,13 +135,21 @@ The purpose of this agent is to assist TVA's legal, compliance, and engineering 
 
 9. Click **Save** in the *instructions* section.
 
+![Screenshot of agent instructions filled out](./images/mcs-create-agent-5.png)
+
 10. Click on **Settings** in the top right of the page.
+
+![Screenshot of the Settings button](./images/mcs-create-agent-6.png)
 
 11. Toggle **Allow ungrounded responses** to turn off in the *Knowledge* section.
 
 12. Click on **Save**
 
+![Screenshot of the Settings changed](./images/mcs-create-agent-7.png)
+
 13. Click on the **X** in the top right of the page to return to the *Overview* page.
+
+![Screenshot of the close settings button](./images/mcs-create-agent-8.png)
 
 ---
 
@@ -158,13 +174,21 @@ For this lab, we'll use **Public websites** (federal agency sites).
 
 1. Click **Add Knowledge**
 
+![Screenshot of the add knowledge button](./images/mcs-knowledge-1.png)
+
 2. Click **Public Website**
+
+![Screenshot of the public website button](./images/mcs-knowledge-2.png)
 
 3. Enter **www.tva.com**
 
 4. Click **Add**
 
+![Screenshot of adding a website part 1](./images/mcs-knowledge-3.png)
+
 5. Click **Add to agent**
+
+![Screenshot of adding a website part 2](./images/mcs-knowledge-4.png)
 
 6. Repeats steps 1 - 5 to add the following sites to knowledge
    - ceq.doe.gov
@@ -175,7 +199,11 @@ For this lab, we'll use **Public websites** (federal agency sites).
 
 7. If **Web Search** is enabled, toggle it to diabled. 
 
+![Screenshot of all the wesites added](./images/mcs-knowledge-5.png)
+
 8. If the test pane is not open, click the **Test**
+
+![Screenshot of all the wesites added](./images/mcs-knowledge-6.png)
 
 9. In the test pane ask it the following questions:
    - *What does FERC Order 2222 require for TVA's distributed energy resource aggregation program?*
@@ -183,7 +211,7 @@ For this lab, we'll use **Public websites** (federal agency sites).
    - *Does our Pickwick Dam license renewal require a full EIS or can we use an EA?*
    - *What are our NERC CIP-013 supply chain risk management obligations?*
 
-10. Review the responses and verify each question returned a valid response.
+10. Review the responses and verify the questions returned a valid response.
 
 11. Ask it *When are taxes due?*
 
