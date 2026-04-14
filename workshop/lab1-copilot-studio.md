@@ -40,7 +40,7 @@ Today, answering a cross-cutting regulatory question — "Can we modify the cool
 ## Part 1: Create the Agent
 
 ### Step 1: Open Copilot Studio
-1. Navigate to https://copilotstudio.microsoft.us
+1. Navigate to https://gcc.powerva.microsoft.us
 
 2. Sign in with your tenant credentials
 
