@@ -212,9 +212,10 @@ For this lab, we'll use **Public websites** (federal agency sites).
 
 10. Review the responses and verify the questions returned a valid response.
 
-11. Ask it *When are taxes due?*
+11. In the test pane ask it the following questions:
+   - *When are taxes due?*
 
-12. Review the response and verify that it did not answer your question.  This is because we disabled **Allow ungrounded responses** and **Web Search**.
+13. Review the response and verify that it did not answer your question.  This is because we disabled **Allow ungrounded responses** and **Web Search**.
 
 ## Part 3: Tools
 
@@ -228,9 +229,8 @@ In Copilot Studio, **Tools** are pre-built or custom actions that extend what yo
 | **Power Automate flows** | Custom flows triggered from a topic node | Submit a variance request to a SharePoint list, send an approval |
 | **HTTP Request (Advanced)** | Direct REST API calls from within a topic | Call an external compliance API |
 | **AI Builder models** | Pre-built or custom AI models | Extract data from a scanned compliance document |
-| **Plugins / Actions** | Extend the agent with custom skills registered as plugins | Custom regulatory lookup service |
 
-### Tools 1: Meeting Management MCP
+### Tools 1: Email Management MCP
 
 1. Click on **Tools** in the top menu.
 
