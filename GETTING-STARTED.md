@@ -90,7 +90,18 @@ FOUNDRY_LAB=05 npx just foundry:lab
 FOUNDRY_LAB=06 npx just foundry:lab
 ```
 
+**Jump to a specific exercise** within a lab:
+
+```bash
+# Run only exercise 3 from Lab 01
+FOUNDRY_LAB=01 FOUNDRY_EX=3 npx just foundry:lab
+
+# Run only exercise 5 from Lab 03
+FOUNDRY_LAB=03 FOUNDRY_EX=5 npx just foundry:lab
+```
+
 > 💡 Each lab has an interactive menu — pick exercises to run individually.
+> When an exercise starts, the source file auto-opens in VS Code so you can follow along with the code.
 
 ---
 
@@ -126,6 +137,8 @@ This deploys: Entra ID app → Container Registry → Container App → APIM (ta
 | `npx just slides` | Open the presentation slides |
 | `npx just dev` | Start MCP server locally |
 | `npx just test:local` | Health-check local server |
+| `FOUNDRY_LAB=01 npx just foundry:lab` | Run a Foundry lab (01–06) |
+| `FOUNDRY_LAB=03 FOUNDRY_EX=5 npx just foundry:lab` | Jump to a specific exercise within a lab |
 | `LAB_NUM=tvad01 WALKTHROUGH=true SEARCH_LOCATION=westus npx just foundry:deploy` | Deploy Foundry Lab infrastructure |
 | `LAB_NUM=tvad01 WALKTHROUGH=true SEARCH_LOCATION=westus RESOURCE_GROUP_OVERRIDE=mcp-workshop-rg npx just foundry:deploy` | Deploy Foundry Lab into a specific pre-existing resource group |
 | `npx just workshop:ship` | Full production deploy |
