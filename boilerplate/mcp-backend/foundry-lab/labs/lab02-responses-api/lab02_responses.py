@@ -389,6 +389,14 @@ EXERCISES = [
 if __name__ == "__main__":
     from shared.exercise_menu import show_exercise_menu, show_exercise_intro, show_exercise_summary
 
+    EXERCISE_FUNCS = {
+        1: exercise_1_basic_response,
+        2: exercise_2_structured_output,
+        3: exercise_3_web_search,
+        4: exercise_4_multi_turn,
+        5: exercise_5_streaming,
+    }
+
     if "--intro-only" in sys.argv:
         show_lab_intro(wait_for_input=False)
         choice = console.input("\n[dim]Would you like to view exercise descriptions? (y/n): [/]").strip().lower()
@@ -396,30 +404,36 @@ if __name__ == "__main__":
             show_exercise_menu("Lab 02 — Responses API", EXERCISES)
         raise SystemExit(0)
 
+    # --exercise N  → run only exercise N (e.g. --exercise 2)
+    selected = None
+    if "--exercise" in sys.argv:
+        idx = sys.argv.index("--exercise")
+        if idx + 1 < len(sys.argv):
+            try:
+                selected = int(sys.argv[idx + 1])
+            except ValueError:
+                pass
+        if selected not in EXERCISE_FUNCS:
+            console.print(f"[bold red]Invalid exercise number. Choose from: {list(EXERCISE_FUNCS.keys())}[/]")
+            raise SystemExit(1)
+
     console.print(Panel("[bold]Lab 02 — Responses API[/]\n"
                         "Azure AI Foundry SDK v2.0 · OpenAI Responses API",
                         style="bold green"))
 
-    show_lab_intro()
+    if selected:
+        ex_meta = EXERCISES[selected - 1]
+        show_exercise_intro(ex_meta)
+        EXERCISE_FUNCS[selected]()
+        show_exercise_summary(ex_meta)
+    else:
+        show_lab_intro()
 
-    show_exercise_intro(EXERCISES[0])
-    exercise_1_basic_response()
-    show_exercise_summary(EXERCISES[0])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[1])
-    exercise_2_structured_output()
-    show_exercise_summary(EXERCISES[1])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[2])
-    exercise_3_web_search()
-    show_exercise_summary(EXERCISES[2])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[3])
-    exercise_4_multi_turn()
-    show_exercise_summary(EXERCISES[3])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[4])
-    exercise_5_streaming()
-    show_exercise_summary(EXERCISES[4])
+        for i, (ex_meta, func) in enumerate(zip(EXERCISES, EXERCISE_FUNCS.values())):
+            show_exercise_intro(ex_meta)
+            func()
+            show_exercise_summary(ex_meta)
+            if i < len(EXERCISES) - 1:
+                console.input("\n[dim]Press Enter to continue...[/]")
 
     console.print("\n[bold green]✓ Lab 02 complete![/]\n")

@@ -545,6 +545,14 @@ EXERCISES = [
 if __name__ == "__main__":
     from shared.exercise_menu import show_exercise_menu, show_exercise_intro, show_exercise_summary
 
+    EXERCISE_FUNCS = {
+        1: pattern_1_sequential_pipeline,
+        2: pattern_2_parallel_fanout,
+        3: pattern_3_supervisor_worker,
+        4: pattern_4_critic_loop,
+        5: pattern_5_foundry_workflow,
+    }
+
     if "--intro-only" in sys.argv:
         show_lab_intro(wait_for_input=False)
         choice = console.input("\n[dim]Would you like to view exercise descriptions? (y/n): [/]").strip().lower()
@@ -552,32 +560,38 @@ if __name__ == "__main__":
             show_exercise_menu("Lab 04 — Multi-Agent Architectures", EXERCISES)
         raise SystemExit(0)
 
+    # --exercise N  → run only exercise N (e.g. --exercise 3)
+    selected = None
+    if "--exercise" in sys.argv:
+        idx = sys.argv.index("--exercise")
+        if idx + 1 < len(sys.argv):
+            try:
+                selected = int(sys.argv[idx + 1])
+            except ValueError:
+                pass
+        if selected not in EXERCISE_FUNCS:
+            console.print(f"[bold red]Invalid exercise number. Choose from: {list(EXERCISE_FUNCS.keys())}[/]")
+            raise SystemExit(1)
+
     console.print(Panel(
         "[bold]Lab 04 — Multi-Agent Architectures[/]\n"
         "Responses API · Azure AI Foundry SDK v2.0",
         style="bold green",
     ))
 
-    show_lab_intro()
+    if selected:
+        ex_meta = EXERCISES[selected - 1]
+        show_exercise_intro(ex_meta)
+        EXERCISE_FUNCS[selected]()
+        show_exercise_summary(ex_meta)
+    else:
+        show_lab_intro()
 
-    show_exercise_intro(EXERCISES[0])
-    pattern_1_sequential_pipeline()
-    show_exercise_summary(EXERCISES[0])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[1])
-    pattern_2_parallel_fanout()
-    show_exercise_summary(EXERCISES[1])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[2])
-    pattern_3_supervisor_worker()
-    show_exercise_summary(EXERCISES[2])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[3])
-    pattern_4_critic_loop()
-    show_exercise_summary(EXERCISES[3])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[4])
-    pattern_5_foundry_workflow()
-    show_exercise_summary(EXERCISES[4])
+        for i, (ex_meta, func) in enumerate(zip(EXERCISES, EXERCISE_FUNCS.values())):
+            show_exercise_intro(ex_meta)
+            func()
+            show_exercise_summary(ex_meta)
+            if i < len(EXERCISES) - 1:
+                console.input("\n[dim]Press Enter to continue...[/]")
 
     console.print("\n[bold green]✓ Lab 04 complete![/]\n")
