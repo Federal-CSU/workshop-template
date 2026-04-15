@@ -9,7 +9,6 @@ By the end of this lab, participants will have:
 - **Knowledge** — File uploads and public website sources covering five federal regulatory agencies
 - **Topics** — Custom topics with trigger phrases, branching logic, and generative orchestration
 - **Tools** — Native Copilot Studio tools (connectors, actions) integrated into topic flows
-- **Topic Inputs** — Variables, entities, and question nodes collecting structured user input
 - **Adaptive Cards** — Rich, interactive card UI for regulatory data display
 - A passing end-to-end demo conversation across multiple regulatory areas
 
