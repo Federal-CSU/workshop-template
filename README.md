@@ -24,6 +24,8 @@ You → Copilot Studio → APIM (JWT validated) → Container Apps (MCP Server) 
 
 ## Quick Start
 
+> 📥 **Enterprise users:** Need to bring this into your GitHub Enterprise org first? See **[Import Repo Guide](workshop/import-repo.md)** — do this before anything else.
+
 **Fastest:** Click 👉 **[Open in Codespaces](https://codespaces.new/johnturek/tva-demo?quickstart=1)** — everything is pre-configured.
 
 **Or clone locally:**
