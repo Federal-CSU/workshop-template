@@ -1,6 +1,62 @@
 # 🚀 TVA Workshop — Getting Started
 
-**Welcome!** Your environment is set up and ready. Follow these steps to get started.
+**Welcome!** Follow the steps below to set up your development environment and get started with the workshop.
+
+---
+
+## Step 0: Set Up Your Environment
+
+### Requirement: GitHub Account
+
+You need **one** of the following:
+- A **GitHub Personal account** (free — [github.com/signup](https://github.com/signup))
+- A **GitHub Enterprise account** (if your org uses GitHub Enterprise)
+
+### 0a. Get Your Own Copy of the Repo
+
+**Personal GitHub:**
+```bash
+# Fork or clone the repo to your account
+git clone https://github.com/johnturek/TVA-Demo.git
+```
+Or click **Fork** at [github.com/johnturek/TVA-Demo](https://github.com/johnturek/TVA-Demo) to create your own copy.
+
+**GitHub Enterprise:**
+Import the repo into your enterprise org. See 👉 [**Import Repo Guide**](workshop/import-repo.md) for step-by-step instructions.
+
+### 0b. Launch Your Cloud Dev Environment
+
+We use **[vscode.dev/azure](https://vscode.dev/azure)** — a browser-based VS Code environment powered by Azure. No local installs needed.
+
+1. Go to 👉 **[https://vscode.dev/azure](https://vscode.dev/azure)**
+2. **Sign in with your Azure account** (the workshop demo tenant credentials from check-in)
+3. This gives you a full VS Code editor in the browser with:
+   - Integrated terminal with Azure CLI pre-authenticated
+   - Built-in Azure extensions (App Service, Functions, Container Apps, etc.)
+   - GitHub integration for cloning repos
+   - Run, debug, and deploy to Azure directly from the browser
+
+> 💡 **Why vscode.dev/azure?** It's a dedicated Azure development environment in your browser — no local setup, no Docker, no installs. You sign in once with your Azure identity and everything is connected.
+
+### 0c. Clone the Repo into Your Environment
+
+Once vscode.dev/azure is running:
+
+1. Open the **terminal** (`Ctrl+\`` or Terminal → New Terminal)
+2. Clone **your fork/import** of the repo:
+   ```bash
+   git clone https://github.com/<YOUR-ACCOUNT-OR-ORG>/TVA-Demo.git
+   cd TVA-Demo
+   npm install
+   ```
+3. Copy the environment template:
+   ```bash
+   cp .env.example .env
+   ```
+
+> ⚠️ Clone **your own copy**, not the original — this way you can push changes and your work is saved to your account.
+
+You're now ready to continue with the steps below! 👇
 
 ---
 
