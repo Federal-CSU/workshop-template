@@ -1,5 +1,5 @@
-# Lab 2: Build the TVA Document Processor in Copilot Studio
-**Duration:** 90 minutes | **Session:** 1 of 2 | **Presenter:** John Scott
+# Lab 1: Build the TVA Regulatory Compliance Assistant in Copilot Studio
+**Duration:** 90 minutes | **Session:** 1 of 3 | **Presenter:** John Scott
 
 ---
 
