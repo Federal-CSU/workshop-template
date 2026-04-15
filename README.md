@@ -98,6 +98,7 @@ This repo uses [`just-task`](https://github.com/microsoft/just) — Microsoft's 
 | `LAB_NUM=tvad01 WALKTHROUGH=true SEARCH_LOCATION=westus npx just foundry:deploy` | Deploy Foundry Lab infrastructure (AI Foundry + AI Search) |
 | `LAB_NUM=tvad01 WALKTHROUGH=true SEARCH_LOCATION=westus RESOURCE_GROUP_OVERRIDE=mcp-workshop-rg npx just foundry:deploy` | Deploy Foundry Lab into a specific pre-existing resource group |
 | `npx just foundry:lab` | Run a Foundry lab (`FOUNDRY_LAB=01` through `06`) |
+| `FOUNDRY_LAB=03 FOUNDRY_EX=5 npx just foundry:lab` | Jump to a specific exercise within a lab |
 
 > **Workshop tip:** Use `LAB_NUM=tvad01 npx just provision:teach` for Lab 3 — it pauses at each step with explanations so participants understand what's being deployed.
 >

@@ -501,37 +501,71 @@ if __name__ == "__main__":
             show_exercise_menu("Lab 05 — RAG", EXERCISES)
         raise SystemExit(0)
 
+    # --exercise N  → run only exercise N (e.g. --exercise 4)
+    # NOTE: Exercises 3-5 depend on earlier exercises for data (index, docs).
+    # When jumping ahead, prerequisites run automatically.
+    selected = None
+    if "--exercise" in sys.argv:
+        idx = sys.argv.index("--exercise")
+        if idx + 1 < len(sys.argv):
+            try:
+                selected = int(sys.argv[idx + 1])
+            except ValueError:
+                pass
+        valid = {1, 2, 3, 4, 5}
+        if selected not in valid:
+            console.print(f"[bold red]Invalid exercise number. Choose from: {sorted(valid)}[/]")
+            raise SystemExit(1)
+
     console.print(Panel(
         "[bold]Lab 05 — Retrieval-Augmented Generation (RAG)[/]\n"
         "Azure AI Search + Foundry SDK v2.0",
         style="bold green",
     ))
 
-    show_lab_intro()
+    def run_pipeline(up_to: int):
+        """Run exercises 1..up_to, passing data between them."""
+        index_name = None
+        docs = None
+        query = None
+        context_docs = None
 
-    show_exercise_intro(EXERCISES[0])
-    index_name = exercise_1_create_index()
-    show_exercise_summary(EXERCISES[0])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[1])
-    docs = exercise_2_generate_embeddings()
-    show_exercise_summary(EXERCISES[1])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[2])
-    exercise_3_upload_documents(index_name, docs)
-    show_exercise_summary(EXERCISES[2])
+        exercise_funcs = {
+            1: exercise_1_create_index,
+            2: exercise_2_generate_embeddings,
+            3: exercise_3_upload_documents,
+            4: exercise_4_hybrid_search,
+            5: exercise_5_rag_generation,
+        }
 
-    import time
-    console.print("\n[dim]Waiting 3s for indexing...[/]")
-    time.sleep(3)
+        for n in range(1, up_to + 1):
+            show_exercise_intro(EXERCISES[n - 1], func=exercise_funcs[n])
+            if n == 1:
+                index_name = exercise_1_create_index()
+            elif n == 2:
+                docs = exercise_2_generate_embeddings()
+            elif n == 3:
+                exercise_3_upload_documents(index_name, docs)
+                import time
+                console.print("\n[dim]Waiting 3s for indexing...[/]")
+                time.sleep(3)
+            elif n == 4:
+                query, context_docs = exercise_4_hybrid_search(index_name)
+            elif n == 5:
+                exercise_5_rag_generation(query, context_docs)
+            show_exercise_summary(EXERCISES[n - 1])
+            if n < up_to:
+                if not selected:
+                    console.input("\n[dim]Press Enter to continue...[/]")
 
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[3])
-    query, context_docs = exercise_4_hybrid_search(index_name)
-    show_exercise_summary(EXERCISES[3])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[4])
-    exercise_5_rag_generation(query, context_docs)
-    show_exercise_summary(EXERCISES[4])
+    if selected:
+        if selected > 1:
+            console.print(f"[dim]Running prerequisites (exercises 1–{selected - 1}) first...[/]\n")
+        run_pipeline(up_to=selected)
+    else:
+        show_lab_intro()
+        run_pipeline(up_to=5)
+
+    console.print("\n[bold green]✓ Lab 05 complete![/]\n")
 
     console.print("\n[bold green]✓ Lab 05 complete![/]\n")

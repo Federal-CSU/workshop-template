@@ -257,6 +257,7 @@ task('foundry:deploy', () => {
 });
 
 // 19. Run a specific Foundry lab (e.g., FOUNDRY_LAB=01 npx just foundry:lab)
+//     Jump to a specific exercise: FOUNDRY_LAB=03 FOUNDRY_EX=5 npx just foundry:lab
 task('foundry:lab', () => {
   const labNum = process.env.FOUNDRY_LAB || '01';
   const labMap = {
@@ -274,5 +275,6 @@ task('foundry:lab', () => {
   }
   logger.info(`Running Foundry Lab ${labNum}...`);
   const python = fs.existsSync('.venv-python') ? fs.readFileSync('.venv-python', 'utf8').trim() : 'python3';
-  run(`"${python}" labs/${labFile}`, { cwd: 'boilerplate/mcp-backend/foundry-lab' });
+  const exerciseFlag = process.env.FOUNDRY_EX ? ` --exercise ${process.env.FOUNDRY_EX}` : '';
+  run(`"${python}" labs/${labFile}${exerciseFlag}`, { cwd: 'boilerplate/mcp-backend/foundry-lab' });
 });

@@ -585,6 +585,12 @@ EXERCISES = [
 if __name__ == "__main__":
     from shared.exercise_menu import show_exercise_menu, show_exercise_intro, show_exercise_summary
 
+    EXERCISE_FUNCS = {
+        1: exercise_1_agent_with_search,
+        2: exercise_2_agentic_retrieval,
+        3: exercise_3_comparison,
+    }
+
     if "--intro-only" in sys.argv:
         show_lab_intro(wait_for_input=False)
         choice = console.input("\n[dim]Would you like to view exercise descriptions? (y/n): [/]").strip().lower()
@@ -592,24 +598,38 @@ if __name__ == "__main__":
             show_exercise_menu("Lab 06 — Foundry IQ", EXERCISES)
         raise SystemExit(0)
 
+    # --exercise N  → run only exercise N (e.g. --exercise 2)
+    selected = None
+    if "--exercise" in sys.argv:
+        idx = sys.argv.index("--exercise")
+        if idx + 1 < len(sys.argv):
+            try:
+                selected = int(sys.argv[idx + 1])
+            except ValueError:
+                pass
+        if selected not in EXERCISE_FUNCS:
+            console.print(f"[bold red]Invalid exercise number. Choose from: {list(EXERCISE_FUNCS.keys())}[/]")
+            raise SystemExit(1)
+
     console.print(Panel(
         "[bold]Lab 06 — Foundry IQ (Knowledge Retrieval for Agents)[/]\n"
         "Agentic Retrieval · Multi-Hop Reasoning · Foundry SDK v2.0",
         style="bold green",
     ))
 
-    show_lab_intro()
+    if selected:
+        ex_meta = EXERCISES[selected - 1]
+        show_exercise_intro(ex_meta, func=EXERCISE_FUNCS[selected])
+        EXERCISE_FUNCS[selected]()
+        show_exercise_summary(ex_meta)
+    else:
+        show_lab_intro()
 
-    show_exercise_intro(EXERCISES[0])
-    exercise_1_agent_with_search()
-    show_exercise_summary(EXERCISES[0])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[1])
-    exercise_2_agentic_retrieval()
-    show_exercise_summary(EXERCISES[1])
-    console.input("\n[dim]Press Enter to continue...[/]")
-    show_exercise_intro(EXERCISES[2])
-    exercise_3_comparison()
-    show_exercise_summary(EXERCISES[2])
+        for i, (ex_meta, ex_func) in enumerate(zip(EXERCISES, EXERCISE_FUNCS.values())):
+            show_exercise_intro(ex_meta, func=ex_func)
+            ex_func()
+            show_exercise_summary(ex_meta)
+            if i < len(EXERCISES) - 1:
+                console.input("\n[dim]Press Enter to continue...[/]")
 
     console.print("\n[bold green]✓ Lab 06 complete![/]\n")
