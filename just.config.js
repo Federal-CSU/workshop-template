@@ -1,4 +1,4 @@
-// just.config.js — TVA Workshop task runner
+// just.config.js — [CUSTOMER_NAME] Workshop task runner
 // Run tasks: npx just <taskname>
 // List tasks: npx just --list
 //

@@ -1,8 +1,8 @@
-# TVA Workshop — Microsoft Copilot Studio + Azure AI
+# [CUSTOMER_NAME] Workshop — [CUSTOMER_USE_CASE]
 
 > **6-hour workshop** | April 15, 2026 | TVA HQ, Knoxville TN
 >
-> Build a production-ready, Entra ID–secured AI agent connected to TVA's knowledge base — live in Azure by end of day.
+> Build a production-ready, Entra ID–secured AI agent connected to [CUSTOMER_NAME]'s knowledge base — live in Azure by end of day.
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/johnturek/TVA-Demo?quickstart=1)
 
@@ -10,7 +10,7 @@
 
 ## What You'll Build
 
-The **TVA Document Processor** — a Copilot Studio agent that:
+The **[CUSTOMER_NAME] Document Processor** — a Copilot Studio agent that:
 - Answers questions about TVA regulatory documents and NERC CIP compliance
 - Processes uploaded compliance reports via Azure AI Foundry RAG
 - Routes securely through Azure APIM with full user identity (OBO)

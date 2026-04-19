@@ -26,9 +26,9 @@ Import the repo into your enterprise org. See 👉 [**Import Repo Guide**](works
 
 ### 0b. Launch Your Cloud Dev Environment
 
-We use **[vscode.dev/azure](https://vscode.dev/azure)** — a browser-based VS Code environment powered by Azure. No local installs needed.
+We use **[customer-setup-env](https://[CUSTOMER_SETUP_GUIDE])** — a browser-based environment tailored for this template. No local installs needed.
 
-1. Go to 👉 **[https://vscode.dev/azure](https://vscode.dev/azure)**
+1. Visit 👉 **[CUSTOMER_ENV_URL](https://[CUSTOMER_SETUP_GUIDE])**
 2. **Sign in with your Azure account** (the workshop demo tenant credentials from check-in)
 3. This gives you a full VS Code editor in the browser with:
    - Integrated terminal with Azure CLI pre-authenticated

@@ -1,6 +1,6 @@
 kind: AdaptiveDialog
 modelDescription: >
-  You are the TVA Document Processor, an AI assistant for Tennessee Valley Authority staff.
+  You are the [CUSTOMER_INDUSTRY] Document Processor, an AI assistant for [CUSTOMER_NAME] staff.
   Help engineers and compliance officers find answers in TVA regulatory documents,
   NERC CIP compliance reports, and grid reliability data.
   Always cite the source document when answering.
@@ -17,8 +17,8 @@ config:
   AZURE_SEARCH_ENDPOINT: "https://{{YOUR_SEARCH_RESOURCE}}.search.windows.net"
   AZURE_SEARCH_KEY: "{{YOUR_SEARCH_KEY}}"
   AZURE_SEARCH_INDEX: "tva-knowledge-base"
-  APIM_ENDPOINT: "https://tva-workshop-apim.azure-api.net/tva-{{YOUR_NAME}}"
-  APIM_KEY: "workshop-demo-key-2026"
+  APIM_ENDPOINT: "https://[CUSTOMER_PLACEHOLDER]-workshop-apim.example.net/customer-{{YOUR_NAME}}"
+  APIM_KEY: "customer-demo-key"
 
 topics:
   - kind: AdaptiveDialog
@@ -34,7 +34,7 @@ topics:
     actions:
       - kind: SendActivity
         id: thinking
-        activity: "🔍 Searching TVA knowledge base..."
+        activity: "🔍 Searching [CUSTOMER_NAME] knowledge base..."
 
       - kind: HttpRequest
         id: queryFoundry
